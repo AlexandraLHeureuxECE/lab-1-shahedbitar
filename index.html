@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tic-Tac-Toe</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <main class="app" aria-label="Tic-Tac-Toe game">
+    <h1>Tic-Tac-Toe</h1>
+    <p class="sub">Two players, same device. X goes first.</p>
+
+    <div class="topbar">
+      <div class="status" aria-live="polite" aria-atomic="true" id="status">
+        <strong>Turn:</strong> <span id="turnText">X</span>
+      </div>
+
+      <button id="restartBtn" type="button">Restart</button>
+    </div>
+
+    <section class="board" role="grid" aria-label="3 by 3 Tic-Tac-Toe board" id="board">
+      <!-- Cells created by script.js -->
+    </section>
+
+    <div class="footer">
+      <div><strong>How to play:</strong> click a square to place your mark.</div>
+      <div id="helperText">Game in progress.</div>
+    </div>
+  </main>
+
+  <script src="script.js" defer></script>
+</body>
+</html>
