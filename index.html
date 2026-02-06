@@ -17,10 +17,16 @@
         <strong>Turn:</strong> <span>X</span>
       </div>
 
-      <button id="restartBtn" type="button">Restart</button>
+      <div class="controls">
+        <button id="confirmBtn" type="button">Confirm Move</button>
+        <button id="restartBtn" type="button">Restart</button>
+      </div>
     </div>
 
-    <!-- tabindex lets keyboard users focus the board -->
+    <div class="hint" id="selectionText" aria-live="polite">
+      Selected: none
+    </div>
+
     <section
       class="board"
       role="grid"
@@ -32,11 +38,9 @@
     </section>
 
     <div class="footer">
-      <div><strong>Mouse:</strong> click a square.</div>
-      <div>
-        <strong>Keyboard:</strong> arrows = move, Enter/Space = place, R = restart
-      </div>
-      <div id="helperText">Game in progress.</div>
+      <div><strong>Mouse:</strong> click a square to select, then Confirm.</div>
+      <div><strong>Keyboard:</strong> arrows = move, Enter/Space = confirm, R = restart</div>
+      <div id="helperText">Select a square, then confirm your move.</div>
     </div>
   </main>
 

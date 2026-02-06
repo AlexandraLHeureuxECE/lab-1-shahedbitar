@@ -148,4 +148,31 @@
     gap: 10px;
     flex-wrap: wrap;
   }
+  .controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  
+  .hint {
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: rgba(15, 23, 42, 0.45);
+    color: var(--muted);
+    font-size: 14px;
+  }
+  
+  /* Board focus outline (keyboard mode) */
+  .board:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--focus), transparent 40%);
+    outline-offset: 6px;
+  }
+  
+  /* Keyboard/mouse selection highlight */
+  .cell.selected {
+    outline: 4px solid color-mix(in srgb, var(--focus), transparent 20%);
+    outline-offset: 2px;
+  }
   

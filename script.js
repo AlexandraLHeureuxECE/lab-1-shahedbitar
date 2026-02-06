@@ -3,7 +3,10 @@
 const boardEl = document.getElementById("board");
 const statusEl = document.getElementById("status");
 const helperTextEl = document.getElementById("helperText");
+const selectionTextEl = document.getElementById("selectionText");
+
 const restartBtn = document.getElementById("restartBtn");
+const confirmBtn = document.getElementById("confirmBtn");
 
 const WIN_LINES = [
   [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
@@ -15,7 +18,7 @@ let board = Array(9).fill(null);   // null | "X" | "O"
 let currentPlayer = "X";
 let gameOver = false;
 
-// Keyboard support state: which cell is currently "selected"
+// Selection state (does NOT place a move until confirmed)
 let selectedIndex = 0;
 
 function init() {
@@ -25,12 +28,13 @@ function init() {
   setSelectedIndex(0);
 
   restartBtn.addEventListener("click", restartGame);
+  confirmBtn.addEventListener("click", confirmSelectedMove);
 
-  // Keyboard support: listen on the board (so it works when focused)
   boardEl.addEventListener("keydown", handleBoardKeyDown);
 
-  // Nice UX: focus board automatically so keyboard works immediately
+  // Start ready for keyboard play
   boardEl.focus();
+  updateConfirmButtonState();
 }
 
 function createBoard() {
@@ -44,56 +48,25 @@ function createBoard() {
     cellBtn.setAttribute("role", "gridcell");
     cellBtn.setAttribute("aria-label", `Cell ${i + 1}`);
 
-    cellBtn.addEventListener("click", handleCellClick);
+    // Click selects ONLY (no immediate placement)
+    cellBtn.addEventListener("click", () => {
+      setSelectedIndex(i);
+      boardEl.focus();
+    });
 
-    // Allow tabbing to cells too (optional but accessible)
     cellBtn.tabIndex = -1;
-
     boardEl.appendChild(cellBtn);
   }
 }
 
-function handleCellClick(event) {
-  const idx = Number(event.currentTarget.dataset.index);
-  attemptMove(idx);
-}
-
-function attemptMove(idx) {
-  if (gameOver) return;
-  if (board[idx] !== null) return;
-
-  board[idx] = currentPlayer;
-  render();
-
-  const winInfo = getWinInfo();
-  if (winInfo) {
-    gameOver = true;
-    highlightWin(winInfo.line);
-    setStatusMessage(`${currentPlayer} wins!`, "Game over.");
-    disableAllCells();
-    return;
-  }
-
-  if (board.every((cell) => cell !== null)) {
-    gameOver = true;
-    setStatusMessage("It's a draw!", "No more moves.");
-    disableAllCells();
-    return;
-  }
-
-  currentPlayer = currentPlayer === "X" ? "O" : "X";
-  setTurnStatus();
-}
-
 function handleBoardKeyDown(e) {
-  // Restart key (works anytime)
+  // Restart anytime
   if (e.key === "r" || e.key === "R") {
     e.preventDefault();
     restartGame();
     return;
   }
 
-  // If game over, allow only restart
   if (gameOver) return;
 
   const row = Math.floor(selectedIndex / 3);
@@ -104,32 +77,32 @@ function handleBoardKeyDown(e) {
   switch (e.key) {
     case "ArrowUp":
       e.preventDefault();
-      nextIndex = ((row + 2) % 3) * 3 + col; // wrap up
+      nextIndex = ((row + 2) % 3) * 3 + col;
       setSelectedIndex(nextIndex);
       return;
 
     case "ArrowDown":
       e.preventDefault();
-      nextIndex = ((row + 1) % 3) * 3 + col; // wrap down
+      nextIndex = ((row + 1) % 3) * 3 + col;
       setSelectedIndex(nextIndex);
       return;
 
     case "ArrowLeft":
       e.preventDefault();
-      nextIndex = row * 3 + ((col + 2) % 3); // wrap left
+      nextIndex = row * 3 + ((col + 2) % 3);
       setSelectedIndex(nextIndex);
       return;
 
     case "ArrowRight":
       e.preventDefault();
-      nextIndex = row * 3 + ((col + 1) % 3); // wrap right
+      nextIndex = row * 3 + ((col + 1) % 3);
       setSelectedIndex(nextIndex);
       return;
 
     case "Enter":
     case " ":
       e.preventDefault();
-      attemptMove(selectedIndex);
+      confirmSelectedMove();
       return;
 
     default:
@@ -145,6 +118,57 @@ function setSelectedIndex(idx) {
 
   const selectedCell = cells[selectedIndex];
   if (selectedCell) selectedCell.classList.add("selected");
+
+  const value = board[selectedIndex];
+  const row = Math.floor(selectedIndex / 3) + 1;
+  const col = (selectedIndex % 3) + 1;
+
+  selectionTextEl.textContent =
+    value === null
+      ? `Selected: Row ${row}, Col ${col} (empty)`
+      : `Selected: Row ${row}, Col ${col} (occupied)`;
+
+  helperTextEl.textContent = "Select a square, then confirm your move.";
+  updateConfirmButtonState();
+}
+
+function updateConfirmButtonState() {
+  const canConfirm = !gameOver && board[selectedIndex] === null;
+  confirmBtn.disabled = !canConfirm;
+}
+
+function confirmSelectedMove() {
+  if (gameOver) return;
+  if (board[selectedIndex] !== null) return;
+
+  // Place the move only on confirm
+  board[selectedIndex] = currentPlayer;
+  render();
+
+  const winInfo = getWinInfo();
+  if (winInfo) {
+    gameOver = true;
+    highlightWin(winInfo.line);
+    setStatusMessage(`${currentPlayer} wins!`, "Game over.");
+    disableAllCells();
+    confirmBtn.disabled = true;
+    return;
+  }
+
+  if (board.every((cell) => cell !== null)) {
+    gameOver = true;
+    setStatusMessage("It's a draw!", "No more moves.");
+    disableAllCells();
+    confirmBtn.disabled = true;
+    return;
+  }
+
+  // Switch turn ONLY after confirmed placement
+  currentPlayer = currentPlayer === "X" ? "O" : "X";
+  setTurnStatus();
+
+  // Keep selection where it is, but update confirm availability
+  setSelectedIndex(selectedIndex);
 }
 
 function getWinInfo() {
@@ -172,18 +196,18 @@ function render() {
     cell.classList.toggle("o", value === "O");
   });
 
-  // Keep selected highlight visible after rerender
+  // Re-apply selection highlight after re-render
   setSelectedIndex(selectedIndex);
 }
 
 function setTurnStatus() {
   statusEl.innerHTML = `<strong>Turn:</strong> <span>${currentPlayer}</span>`;
-  helperTextEl.textContent = "Game in progress.";
 }
 
 function setStatusMessage(mainText, helperText) {
   statusEl.innerHTML = `<strong>${mainText}</strong>`;
   helperTextEl.textContent = helperText;
+  selectionTextEl.textContent = "Selected: none";
 }
 
 function disableAllCells() {
@@ -214,8 +238,8 @@ function restartGame() {
   render();
   setTurnStatus();
 
-  // Reset keyboard cursor and refocus board
   setSelectedIndex(0);
+  helperTextEl.textContent = "Select a square, then confirm your move.";
   boardEl.focus();
 }
 
