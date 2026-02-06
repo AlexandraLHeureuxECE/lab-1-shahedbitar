@@ -208,6 +208,7 @@ function renderBoard() {
 
 function setTurnText() {
   statusEl.innerHTML = `<strong>Turn:</strong> <span>${currentPlayer}</span>`;
+  updateBackgroundForTurn(); // ✅ makes the body class match the current player
 }
 
 function highlightWin(line) {
