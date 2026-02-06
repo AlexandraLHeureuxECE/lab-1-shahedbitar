@@ -25,6 +25,7 @@ function init() {
   createBoard();
   renderBoard();
   setTurnText();
+  updateBackgroundForTurn();
 
   setSelectedIndex(0);
 
