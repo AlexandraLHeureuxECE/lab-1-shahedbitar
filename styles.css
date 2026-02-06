@@ -17,10 +17,38 @@
     display: grid;
     place-items: center;
     font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    background: radial-gradient(1200px 800px at 30% 20%, #1d2b58 0%, var(--bg) 60%);
-    color: var(--text);
     padding: 24px;
+  
+    /* Default background (X starts first = blue) */
+    background: radial-gradient(
+      1200px 800px at 30% 20%,
+      #3b82f6 0%,
+      #0f172a 65%
+    );
+  
+    color: var(--text);
+  
+    transition: background 0.6s ease;
   }
+  
+  /* X's turn (blue theme) */
+  body.turn-x {
+    background: radial-gradient(
+      1200px 800px at 30% 20%,
+      #3b82f6 0%,
+      #0f172a 65%
+    );
+  }
+  
+  /* O's turn (pink theme) */
+  body.turn-o {
+    background: radial-gradient(
+      1200px 800px at 30% 20%,
+      #ec4899 0%,
+      #0f172a 65%
+    );
+  }
+  
   
   .app {
     width: min(520px, 95vw);

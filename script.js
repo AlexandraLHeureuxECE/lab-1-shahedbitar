@@ -214,6 +214,15 @@ function highlightWin(line) {
   const cells = getCells();
   line.forEach((idx) => cells[idx].classList.add("win"));
 }
+function updateBackgroundForTurn() {
+  document.body.classList.remove("turn-x", "turn-o");
+
+  if (currentPlayer === "X") {
+    document.body.classList.add("turn-x");
+  } else {
+    document.body.classList.add("turn-o");
+  }
+}
 
 function restartGame() {
   board = Array(9).fill(null);
