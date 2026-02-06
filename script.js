@@ -154,8 +154,13 @@ function confirmSelectedMove() {
   if (winInfo) {
     gameOver = true;
     highlightWin(winInfo.line);
-    statusEl.innerHTML = `<strong>${currentPlayer} wins!</strong>`;
-    helperTextEl.textContent = "Game over. Press Restart to play again.";
+    statusEl.className = "status result " + 
+  (currentPlayer === "X" ? "win-x" : "win-o");
+
+statusEl.textContent = `${currentPlayer} WINS! 🎉`;
+
+helperTextEl.textContent = "Game over. Press Restart to play again.";
+
     confirmBtn.disabled = true;
     disableFilledFocus(); // optional clean-up
     return;
@@ -163,8 +168,12 @@ function confirmSelectedMove() {
 
   if (board.every((x) => x !== null)) {
     gameOver = true;
-    statusEl.innerHTML = `<strong>It's a draw!</strong>`;
-    helperTextEl.textContent = "No more moves. Press Restart to play again.";
+    statusEl.className = "status result draw";
+
+statusEl.textContent = "IT'S A DRAW! 🤝";
+
+helperTextEl.textContent = "No more moves. Press Restart to play again.";
+
     confirmBtn.disabled = true;
     disableFilledFocus();
     return;
@@ -229,7 +238,9 @@ function updateBackgroundForTurn() {
 function restartGame() {
   board = Array(9).fill(null);
   currentPlayer = "X";
+  
   gameOver = false;
+  statusEl.className = "status"; // reset styling
 
   // Clear win highlights
   getCells().forEach((c) => c.classList.remove("win"));

@@ -203,4 +203,45 @@
     outline: 4px solid color-mix(in srgb, var(--focus), transparent 20%);
     outline-offset: 2px;
   }
-  
+  /* Emphasized result display */
+.status.result {
+  font-size: 34px;
+  font-weight: 900;
+  text-align: center;
+  padding: 18px 16px;
+  letter-spacing: 0.5px;
+  animation: popIn 0.35s ease-out;
+}
+
+/* X wins = blue */
+.status.win-x {
+  color: #60a5fa;
+  border-color: rgba(96, 165, 250, 0.5);
+  background: rgba(96, 165, 250, 0.12);
+}
+
+/* O wins = pink */
+.status.win-o {
+  color: #f472b6;
+  border-color: rgba(244, 114, 182, 0.5);
+  background: rgba(244, 114, 182, 0.12);
+}
+
+/* Draw = red */
+.status.draw {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.12);
+}
+
+/* little pop animation */
+@keyframes popIn {
+  from {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
