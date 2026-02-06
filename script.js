@@ -9,53 +9,54 @@ const restartBtn = document.getElementById("restartBtn");
 const confirmBtn = document.getElementById("confirmBtn");
 
 const WIN_LINES = [
-  [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
-  [0, 3, 6], [1, 4, 7], [2, 5, 8], // cols
-  [0, 4, 8], [2, 4, 6],            // diagonals
+  [0, 1, 2], [3, 4, 5], [6, 7, 8],
+  [0, 3, 6], [1, 4, 7], [2, 5, 8],
+  [0, 4, 8], [2, 4, 6],
 ];
 
-let board = Array(9).fill(null);   // null | "X" | "O"
+let board = Array(9).fill(null); // null | "X" | "O"
 let currentPlayer = "X";
 let gameOver = false;
 
-// Selection state (does NOT place a move until confirmed)
+// selection only (not a move)
 let selectedIndex = 0;
 
 function init() {
   createBoard();
-  render();
-  setTurnStatus();
+  renderBoard();
+  setTurnText();
+
   setSelectedIndex(0);
 
-  restartBtn.addEventListener("click", restartGame);
   confirmBtn.addEventListener("click", confirmSelectedMove);
+  restartBtn.addEventListener("click", restartGame);
 
+  // keyboard support on the board container
   boardEl.addEventListener("keydown", handleBoardKeyDown);
 
-  // Start ready for keyboard play
   boardEl.focus();
-  updateConfirmButtonState();
+  updateConfirmButton();
 }
 
 function createBoard() {
   boardEl.innerHTML = "";
 
   for (let i = 0; i < 9; i++) {
-    const cellBtn = document.createElement("button");
-    cellBtn.type = "button";
-    cellBtn.className = "cell";
-    cellBtn.dataset.index = String(i);
-    cellBtn.setAttribute("role", "gridcell");
-    cellBtn.setAttribute("aria-label", `Cell ${i + 1}`);
+    const cell = document.createElement("button");
+    cell.type = "button";
+    cell.className = "cell";
+    cell.dataset.index = String(i);
+    cell.setAttribute("role", "gridcell");
+    cell.setAttribute("aria-label", `Cell ${i + 1}`);
 
-    // Click selects ONLY (no immediate placement)
-    cellBtn.addEventListener("click", () => {
+    // CLICK = SELECT ONLY
+    cell.addEventListener("click", () => {
+      if (gameOver) return;
       setSelectedIndex(i);
       boardEl.focus();
     });
 
-    cellBtn.tabIndex = -1;
-    boardEl.appendChild(cellBtn);
+    boardEl.appendChild(cell);
   }
 }
 
@@ -72,33 +73,34 @@ function handleBoardKeyDown(e) {
   const row = Math.floor(selectedIndex / 3);
   const col = selectedIndex % 3;
 
-  let nextIndex = selectedIndex;
+  let next = selectedIndex;
 
   switch (e.key) {
     case "ArrowUp":
       e.preventDefault();
-      nextIndex = ((row + 2) % 3) * 3 + col;
-      setSelectedIndex(nextIndex);
+      next = ((row + 2) % 3) * 3 + col;
+      setSelectedIndex(next);
       return;
 
     case "ArrowDown":
       e.preventDefault();
-      nextIndex = ((row + 1) % 3) * 3 + col;
-      setSelectedIndex(nextIndex);
+      next = ((row + 1) % 3) * 3 + col;
+      setSelectedIndex(next);
       return;
 
     case "ArrowLeft":
       e.preventDefault();
-      nextIndex = row * 3 + ((col + 2) % 3);
-      setSelectedIndex(nextIndex);
+      next = row * 3 + ((col + 2) % 3);
+      setSelectedIndex(next);
       return;
 
     case "ArrowRight":
       e.preventDefault();
-      nextIndex = row * 3 + ((col + 1) % 3);
-      setSelectedIndex(nextIndex);
+      next = row * 3 + ((col + 1) % 3);
+      setSelectedIndex(next);
       return;
 
+    // Enter/Space = CONFIRM (finalize)
     case "Enter":
     case " ":
       e.preventDefault();
@@ -113,61 +115,65 @@ function handleBoardKeyDown(e) {
 function setSelectedIndex(idx) {
   selectedIndex = idx;
 
-  const cells = [...document.querySelectorAll(".cell")];
-  cells.forEach((cell) => cell.classList.remove("selected"));
+  const cells = getCells();
+  cells.forEach((c) => c.classList.remove("selected"));
+  cells[selectedIndex].classList.add("selected");
 
-  const selectedCell = cells[selectedIndex];
-  if (selectedCell) selectedCell.classList.add("selected");
+  const r = Math.floor(selectedIndex / 3) + 1;
+  const c = (selectedIndex % 3) + 1;
 
-  const value = board[selectedIndex];
-  const row = Math.floor(selectedIndex / 3) + 1;
-  const col = (selectedIndex % 3) + 1;
+  if (board[selectedIndex] === null) {
+    selectionTextEl.textContent = `Selected: Row ${r}, Col ${c} (empty)`;
+  } else {
+    selectionTextEl.textContent = `Selected: Row ${r}, Col ${c} (occupied)`;
+  }
 
-  selectionTextEl.textContent =
-    value === null
-      ? `Selected: Row ${row}, Col ${col} (empty)`
-      : `Selected: Row ${row}, Col ${col} (occupied)`;
-
-  helperTextEl.textContent = "Select a square, then confirm your move.";
-  updateConfirmButtonState();
+  helperTextEl.textContent = "Select a square, then click Confirm Move.";
+  updateConfirmButton();
 }
 
-function updateConfirmButtonState() {
-  const canConfirm = !gameOver && board[selectedIndex] === null;
-  confirmBtn.disabled = !canConfirm;
+function updateConfirmButton() {
+  // Confirm only if game is active and selected cell is empty
+  confirmBtn.disabled = gameOver || board[selectedIndex] !== null;
 }
 
 function confirmSelectedMove() {
+  // CONFIRM is the ONLY place we actually place a mark + switch turns
   if (gameOver) return;
   if (board[selectedIndex] !== null) return;
 
-  // Place the move only on confirm
+  // Place mark
   board[selectedIndex] = currentPlayer;
-  render();
 
+  // Update UI
+  renderBoard();
+
+  // Check win/draw
   const winInfo = getWinInfo();
   if (winInfo) {
     gameOver = true;
     highlightWin(winInfo.line);
-    setStatusMessage(`${currentPlayer} wins!`, "Game over.");
-    disableAllCells();
+    statusEl.innerHTML = `<strong>${currentPlayer} wins!</strong>`;
+    helperTextEl.textContent = "Game over. Press Restart to play again.";
     confirmBtn.disabled = true;
+    disableFilledFocus(); // optional clean-up
     return;
   }
 
-  if (board.every((cell) => cell !== null)) {
+  if (board.every((x) => x !== null)) {
     gameOver = true;
-    setStatusMessage("It's a draw!", "No more moves.");
-    disableAllCells();
+    statusEl.innerHTML = `<strong>It's a draw!</strong>`;
+    helperTextEl.textContent = "No more moves. Press Restart to play again.";
     confirmBtn.disabled = true;
+    disableFilledFocus();
     return;
   }
 
-  // Switch turn ONLY after confirmed placement
+  // SWITCH TURN ONLY AFTER CONFIRM
   currentPlayer = currentPlayer === "X" ? "O" : "X";
-  setTurnStatus();
+  setTurnText();
 
-  // Keep selection where it is, but update confirm availability
+  // Keep selection in place and update confirm enabled/disabled
   setSelectedIndex(selectedIndex);
 }
 
@@ -181,51 +187,32 @@ function getWinInfo() {
   return null;
 }
 
-function highlightWin(line) {
-  const cells = [...document.querySelectorAll(".cell")];
-  for (const idx of line) cells[idx].classList.add("win");
-}
-
-function render() {
-  const cells = [...document.querySelectorAll(".cell")];
+function renderBoard() {
+  const cells = getCells();
 
   cells.forEach((cell, i) => {
-    const value = board[i];
-    cell.textContent = value ?? "";
-    cell.classList.toggle("x", value === "X");
-    cell.classList.toggle("o", value === "O");
+    const v = board[i];
+    cell.textContent = v ?? "";
+    cell.classList.toggle("x", v === "X");
+    cell.classList.toggle("o", v === "O");
   });
 
-  // Re-apply selection highlight after re-render
-  setSelectedIndex(selectedIndex);
+  // Re-apply selection highlight after rendering
+  if (cells[selectedIndex]) {
+    cells.forEach((c) => c.classList.remove("selected"));
+    cells[selectedIndex].classList.add("selected");
+  }
+
+  updateConfirmButton();
 }
 
-function setTurnStatus() {
+function setTurnText() {
   statusEl.innerHTML = `<strong>Turn:</strong> <span>${currentPlayer}</span>`;
 }
 
-function setStatusMessage(mainText, helperText) {
-  statusEl.innerHTML = `<strong>${mainText}</strong>`;
-  helperTextEl.textContent = helperText;
-  selectionTextEl.textContent = "Selected: none";
-}
-
-function disableAllCells() {
-  document.querySelectorAll(".cell").forEach((cell) => {
-    cell.setAttribute("disabled", "true");
-  });
-}
-
-function enableAllCells() {
-  document.querySelectorAll(".cell").forEach((cell) => {
-    cell.removeAttribute("disabled");
-  });
-}
-
-function clearWinHighlight() {
-  document.querySelectorAll(".cell").forEach((cell) => {
-    cell.classList.remove("win");
-  });
+function highlightWin(line) {
+  const cells = getCells();
+  line.forEach((idx) => cells[idx].classList.add("win"));
 }
 
 function restartGame() {
@@ -233,14 +220,25 @@ function restartGame() {
   currentPlayer = "X";
   gameOver = false;
 
-  enableAllCells();
-  clearWinHighlight();
-  render();
-  setTurnStatus();
+  // Clear win highlights
+  getCells().forEach((c) => c.classList.remove("win"));
+
+  renderBoard();
+  setTurnText();
 
   setSelectedIndex(0);
-  helperTextEl.textContent = "Select a square, then confirm your move.";
+  helperTextEl.textContent = "Select a square, then click Confirm Move.";
   boardEl.focus();
+}
+
+function disableFilledFocus() {
+  // Not required, but keeps UI feeling consistent after game ends
+  // (Cells still visible; confirm disabled; selection stays.)
+  updateConfirmButton();
+}
+
+function getCells() {
+  return [...document.querySelectorAll(".cell")];
 }
 
 init();
