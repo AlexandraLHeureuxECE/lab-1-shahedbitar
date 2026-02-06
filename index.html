@@ -14,18 +14,28 @@
 
     <div class="topbar">
       <div class="status" aria-live="polite" aria-atomic="true" id="status">
-        <strong>Turn:</strong> <span id="turnText">X</span>
+        <strong>Turn:</strong> <span>X</span>
       </div>
 
       <button id="restartBtn" type="button">Restart</button>
     </div>
 
-    <section class="board" role="grid" aria-label="3 by 3 Tic-Tac-Toe board" id="board">
+    <!-- tabindex lets keyboard users focus the board -->
+    <section
+      class="board"
+      role="grid"
+      aria-label="3 by 3 Tic-Tac-Toe board"
+      id="board"
+      tabindex="0"
+    >
       <!-- Cells created by script.js -->
     </section>
 
     <div class="footer">
-      <div><strong>How to play:</strong> click a square to place your mark.</div>
+      <div><strong>Mouse:</strong> click a square.</div>
+      <div>
+        <strong>Keyboard:</strong> arrows = move, Enter/Space = place, R = restart
+      </div>
       <div id="helperText">Game in progress.</div>
     </div>
   </main>

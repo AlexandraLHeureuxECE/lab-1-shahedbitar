@@ -119,6 +119,17 @@
     outline: 3px solid color-mix(in srgb, var(--focus), transparent 35%);
     outline-offset: 3px;
   }
+    /* When the board itself is focused (keyboard mode), show a subtle outline */
+.board:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--focus), transparent 40%);
+    outline-offset: 6px;
+  }
+  
+  /* Keyboard "cursor" highlight */
+  .cell.selected {
+    outline: 4px solid color-mix(in srgb, var(--focus), transparent 20%);
+    outline-offset: 2px;
+  }
   
   .x { color: #60a5fa; }
   .o { color: #f472b6; }
